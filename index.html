@@ -523,13 +523,18 @@ addEventListener('pagehide', persist);
 
 /* ---------- Loop ---------- */
 let last = performance.now(), uiT = 0, saveT = 0;
+let loggedErr = false;
 function frame(t){
+  requestAnimationFrame(frame);                 // schedule first, so one bad frame can never freeze the game
   const dt = Math.min((t - last) / 1000, .25); last = t;
-  if (!sim) update(dt);
-  drawBars();
-  uiT += dt; if (uiT > .2){ uiT = 0; refresh(); }
-  saveT += dt; if (saveT > 5 && !sim){ saveT = 0; persist(); }
-  requestAnimationFrame(frame);
+  try {
+    if (!sim) update(dt);
+    drawBars();
+    uiT += dt; if (uiT > .2){ uiT = 0; refresh(); }
+    saveT += dt; if (saveT > 5 && !sim){ saveT = 0; persist(); }
+  } catch(err){
+    if (!loggedErr){ loggedErr = true; console.error('Lantern Market frame error', err); }
+  }
 }
 let sim = false;
 render(); offlineReturn();
